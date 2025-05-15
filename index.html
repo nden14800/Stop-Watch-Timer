@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ストップウォッチ＆タイマー</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Google Sans', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+            transition: background-color 0.3s, color 0.3s;
+            opacity: 0;
+            animation: fadeIn 1s ease-in-out forwards;
+        }
+
+        body.dark-mode {
+            background-color: #333;
+            color: #f4f4f4;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            width: 90%;
+            max-width: 600px;
+        }
+
+        .stopwatch, .timer {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
+        .dark-mode .stopwatch, .dark-mode .timer {
+            background-color: #444;
+            box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
+        }
+
+        .stopwatch-controls, .timer-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Google Sans', sans-serif;
+            font-size: 16px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .start-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .stop-btn {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .reset-btn {
+            background-color: #008CBA;
+            color: white;
+        }
+
+        .dark-mode button {
+            color: #eee;
+        }
+
+        .dark-mode .start-btn {
+            background-color: #66bb6a;
+        }
+
+        .dark-mode .stop-btn {
+            background-color: #ef5350;
+        }
+
+        .dark-mode .reset-btn {
+            background-color: #42a5f5;
+        }
+
+        .stopwatch-display, .timer-display {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .precision-select {
+            margin-bottom: 10px;
+        }
+
+        .timer-input {
+            display: flex; /* 横方向に配置 */
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .timer-input > div {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .timer-input label {
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+
+        .timer-input input {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 60px;
+            text-align: center;
+            font-family: 'Google Sans', sans-serif;
+        }
+
+        .dark-mode .timer-input input {
+            background-color: #555;
+            color: #eee;
+            border-color: #777;
+        }
+
+        .notification-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .notification {
+            background-color: #2196F3;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            opacity: 0;
+            animation: fadeInNotification 0.5s ease-in-out forwards;
+        }
+
+        .dark-mode .notification {
+            background-color: #64b5f6;
+            color: #222;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeInNotification {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="stopwatch">
+            <h2>ストップウォッチ</h2>
+            <div class="precision-select">
+                表示精度:
+                <select id="precision">
+                    <option value="100">0.1秒</option>
+                    <option value="10">0.01秒</option>
+                    <option value="1">0.001秒</option>
+                </select>
+            </div>
+            <div class="stopwatch-display">0.000</div>
+            <div class="stopwatch-controls">
+                <button class="start-btn" onclick="startStopwatch()">スタート</button>
+                <button class="stop-btn" onclick="stopStopwatch()">ストップ</button>
+                <button class="reset-btn" onclick="resetStopwatch()">リセット</button>
+            </div>
+        </div>
+
+        <div class="timer">
+            <h2>タイマー</h2>
+            <div class="timer-input">
+                <div>
+                    <label for="hours">時</label>
+                    <input type="number" id="hours" placeholder="時" value="0" min="0" max="23">
+                </div>
+                <div>
+                    <label for="minutes">分</label>
+                    <input type="number" id="minutes" placeholder="分" value="0" min="0" max="59">
+                </div>
+                <div>
+                    <label for="seconds">秒</label>
+                    <input type="number" id="seconds" placeholder="秒" value="0" min="0" max="59">
+                </div>
+            </div>
+            <div class="timer-display">00:00:00</div>
+            <div class="timer-controls">
+                <button class="start-btn" onclick="startTimer()">スタート</button>
+                <button class="stop-btn" onclick="stopTimer()">ストップ</button>
+                <button class="reset-btn" onclick="resetTimer()">リセット</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification-container">
+        <div id="notification" class="notification" style="display: none;"></div>
+    </div>
+
+    <script>
+        const body = document.body;
+        const precisionSelect = document.getElementById('precision');
+        const stopwatchDisplay = document.querySelector('.stopwatch-display');
+        let stopwatchInterval;
+        let stopwatchStartTime = 0;
+        let stopwatchElapsedTime = 0;
+        let selectedPrecision = 1000; // デフォルトは0.1秒
+
+        const hoursInput = document.getElementById('hours');
+        const minutesInput = document.getElementById('minutes');
+        const secondsInput = document.getElementById('seconds');
+        const timerDisplay = document.querySelector('.timer-display');
+        let timerInterval;
+        let timerEndTime;
+
+        const notificationContainer = document.querySelector('.notification-container');
+        const notificationDiv = document.getElementById('notification');
+        let notificationTimeout;
+
+        // デバイスのテーマに合わせてテーマを切り替える
+        function updateTheme() {
+            if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                body.classList.add('dark-mode');
+            } else {
+                body.classList.remove('dark-mode');
+            }
+        }
+
+        // 初期ロード時とテーマ変更時に実行
+        updateTheme();
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateTheme);
+
+        // フェードインアニメーション
+        window.onload = () => {
+            body.style.opacity = 1;
+        };
+
+        // ストップウォッチ
+        precisionSelect.addEventListener('change', () => {
+            selectedPrecision = parseInt(precisionSelect.value);
+            updateStopwatchDisplay();
+        });
+
+        function startStopwatch() {
+            if (!stopwatchInterval) {
+                stopwatchStartTime = Date.now() - stopwatchElapsedTime;
+                stopwatchInterval = setInterval(updateStopwatch, 1); // 1ms間隔で更新
+            }
+        }
+
+        function stopStopwatch() {
+            clearInterval(stopwatchInterval);
+            stopwatchInterval = null;
+        }
+
+        function resetStopwatch() {
+            stopStopwatch();
+            stopwatchElapsedTime = 0;
+            updateStopwatchDisplay();
+        }
+
+        function updateStopwatch() {
+            stopwatchElapsedTime = Date.now() - stopwatchStartTime;
+            updateStopwatchDisplay();
+        }
+
+        function updateStopwatchDisplay() {
+            const milliseconds = Math.floor(stopwatchElapsedTime);
+            let displayTime;
+            if (selectedPrecision === 100) { // 0.1秒
+                displayTime = (milliseconds / 1000).toFixed(1);
+            } else if (selectedPrecision === 10) { // 0.01秒
+                displayTime = (milliseconds / 1000).toFixed(2);
+            } else { // 0.001秒
+                displayTime = (milliseconds / 1000).toFixed(3);
+            }
+            stopwatchDisplay.textContent = displayTime;
+        }
+
+        // タイマー
+        function startTimer() {
+            const hours = parseInt(hoursInput.value);
+            const minutes = parseInt(minutesInput.value);
+            const seconds = parseInt(secondsInput.value);
+
+            const totalSeconds = (hours * 3600) + (minutes * 60) + seconds;
+
+            if (totalSeconds <= 0) {
+                return;
+            }
+
+            timerEndTime = Date.now() + (totalSeconds * 1000);
+            clearInterval(timerInterval);
+            timerInterval = setInterval(updateTimer, 1); // 1ms間隔で更新
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+
+        function resetTimer() {
+            stopTimer();
+            hoursInput.value = '0';
+            minutesInput.value = '0';
+            secondsInput.value = '0';
+            timerDisplay.textContent = '00:00:00';
+        }
+
+        function updateTimer() {
+            const timeLeft = timerEndTime - Date.now();
+
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+                timerDisplay.textContent = '00:00:00';
+                showNotification('タイマー終了！');
+            } else {
+                const totalSeconds = Math.ceil(timeLeft / 1000);
+                const hours = Math.floor(totalSeconds / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
+
+                const formattedTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                timerDisplay.textContent = formattedTime;
+            }
+        }
+
+        // 通知
+        function showNotification(message) {
+            notificationDiv.textContent = message;
+            notificationDiv.style.display = 'block';
+            // 少し遅れてフェードイン
+            setTimeout(() => {
+                notificationDiv.style.opacity = 1;
+                notificationDiv.style.transform = 'translateY(0)';
+            }, 50);
+
+            clearTimeout(notificationTimeout);
+            notificationTimeout = setTimeout(hideNotification, 3000);
+        }
+
+        function hideNotification() {
+            notificationDiv.style.opacity = 0;
+            notificationDiv.style.transform = 'translateY(-20px)';
+            setTimeout(() => {
+                notificationDiv.style.display = 'none';
+            }, 500);
+        }
+
+        notificationDiv.addEventListener('click', hideNotification);
+    </script>
+</body>
+</html>
